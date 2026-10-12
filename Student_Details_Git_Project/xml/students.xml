@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE students SYSTEM "students.dtd">
+<students>
+    <student>
+        <id>101</id>
+        <name>Abi</name>
+        <department>IT</department>
+        <year>3</year>
+    </student>
+    <student>
+        <id>102</id>
+        <name>Priya</name>
+        <department>CSE</department>
+        <year>2</year>
+    </student>
+    <student>
+        <id>103</id>
+        <name>Rahul</name>
+        <department>ECE</department>
+        <year>3</year>
+    </student>
+</students>

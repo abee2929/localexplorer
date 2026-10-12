@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="studentApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Details Management</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 80%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        input {
+            margin: 3px;
+        }
+    </style>
+</head>
+<body ng-controller="studentController">
+    <h1>Student Details Management</h1>
+
+    <form ng-submit="saveStudent()">
+        <input type="number" ng-model="newStudent.id" placeholder="ID" required>
+        <input type="text" ng-model="newStudent.name" placeholder="Name" required>
+        <input type="text" ng-model="newStudent.department" placeholder="Department" required>
+        <input type="number" ng-model="newStudent.year" placeholder="Year" min="1" max="6" required>
+        <button type="submit" ng-disabled="busy">{{ editId === null ? "Add Student" : "Update Student" }}</button>
+        <button type="button" ng-if="editId !== null" ng-click="cancelEdit()">Cancel</button>
+    </form>
+
+    <p>{{ message }}</p>
+
+    <input type="text" ng-model="searchText" placeholder="Search students">
+    <p>Total Students: {{ students.length }}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Year</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="student in students | filter:searchText track by student.id">
+                <td>{{ student.id }}</td>
+                <td>{{ student.name }}</td>
+                <td>{{ student.department }}</td>
+                <td>{{ student.year }}</td>
+                <td>
+                    <button type="button" ng-click="editStudent(student)">Modify</button>
+                    <button type="button" ng-click="removeStudent(student)">Remove</button>
+                </td>
+            </tr>
+            <tr ng-if="(students | filter:searchText).length === 0">
+                <td colspan="5">No students found</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        var app = angular.module("studentApp", []);
+
+        app.controller("studentController", function($scope, $http) {
+            var api = "http://localhost:3000/students";
+            $scope.students = [];
+            $scope.newStudent = {};
+            $scope.editId = null;
+            $scope.message = "Loading students...";
+            $scope.busy = false;
+
+            function loadStudents() {
+                $http.get(api).then(function(response) {
+                    $scope.students = response.data;
+                    $scope.message = "";
+                }).catch(function() {
+                    $scope.message = "Could not connect to the backend. Start MongoDB and the Node.js server.";
+                });
+            }
+
+            $scope.saveStudent = function() {
+                var data = {
+                    id: Number($scope.newStudent.id),
+                    name: ($scope.newStudent.name || "").trim(),
+                    department: ($scope.newStudent.department || "").trim(),
+                    year: Number($scope.newStudent.year)
+                };
+
+                $scope.busy = true;
+                var request = $scope.editId === null
+                    ? $http.post(api, data)
+                    : $http.put(api + "/" + $scope.editId, data);
+
+                request.then(function(response) {
+                    $scope.message = response.data.message;
+                    $scope.newStudent = {};
+                    $scope.editId = null;
+                    loadStudents();
+                }).catch(function(error) {
+                    $scope.message = error.data && error.data.message
+                        ? error.data.message
+                        : "Unable to save student.";
+                }).finally(function() {
+                    $scope.busy = false;
+                });
+            };
+
+            $scope.editStudent = function(student) {
+                $scope.editId = student.id;
+                $scope.newStudent = angular.copy(student);
+            };
+
+            $scope.cancelEdit = function() {
+                $scope.newStudent = {};
+                $scope.editId = null;
+            };
+
+            $scope.removeStudent = function(student) {
+                if (!confirm("Remove student " + student.name + "?")) {
+                    return;
+                }
+
+                $http.delete(api + "/" + student.id).then(function(response) {
+                    $scope.message = response.data.message;
+                    if ($scope.editId === student.id) {
+                        $scope.cancelEdit();
+                    }
+                    loadStudents();
+                }).catch(function(error) {
+                    $scope.message = error.data && error.data.message
+                        ? error.data.message
+                        : "Unable to remove student.";
+                });
+            };
+
+            loadStudents();
+        });
+    </script>
+</body>
+</html>

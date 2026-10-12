@@ -1,0 +1,6 @@
+<!ELEMENT students (student*)>
+<!ELEMENT student (id, name, department, year)>
+<!ELEMENT id (#PCDATA)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT department (#PCDATA)>
+<!ELEMENT year (#PCDATA)>
