@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html ng-app="studentApp">
+<head>
+    <title>Student Details</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 90%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body ng-controller="studentController">
+
+    <h1>Student Details</h1>
+
+    <h3>{{ editIndex === -1 ? "Add Student" : "Modify Student" }}</h3>
+
+    <form ng-submit="saveStudent()">
+        <input type="number" ng-model="newStudent.id" placeholder="Student ID" required>
+        <input type="text" ng-model="newStudent.name" placeholder="Student Name" required>
+        <input type="text" ng-model="newStudent.department" placeholder="Department" required>
+        <input type="number" ng-model="newStudent.year" placeholder="Year" min="1" max="6" required>
+
+        <button type="submit">
+            {{ editIndex === -1 ? "Add Student" : "Update Student" }}
+        </button>
+
+        <button type="button" ng-if="editIndex !== -1" ng-click="cancelEdit()">
+            Cancel
+        </button>
+    </form>
+
+    <h3>Student List</h3>
+
+    <input type="text" ng-model="searchText" placeholder="Search students">
+
+    <p>Total Students: {{ students.length }}</p>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Year</th>
+            <th>Actions</th>
+        </tr>
+
+        <tr ng-repeat="student in students | filter:searchText">
+            <td>{{ student.id }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ student.department }}</td>
+            <td>{{ student.year }}</td>
+            <td>
+                <button ng-click="editStudent(student)">Modify</button>
+                <button ng-click="removeStudent(student)">Remove</button>
+            </td>
+        </tr>
+
+        <tr ng-if="(students | filter:searchText).length === 0">
+            <td colspan="5">No students found</td>
+        </tr>
+    </table>
+
+    <script>
+        var app = angular.module("studentApp", []);
+
+        app.controller("studentController", function($scope) {
+            $scope.students = [
+                {id: 101, name: "Abi", department: "IT", year: 3},
+                {id: 102, name: "Priya", department: "CSE", year: 2},
+                {id: 103, name: "Rahul", department: "ECE", year: 3},
+                {id: 104, name: "Divya", department: "IT", year: 4},
+                {id: 105, name: "Arun", department: "CSE", year: 1}
+            ];
+
+            $scope.newStudent = {};
+            $scope.editIndex = -1;
+
+            $scope.saveStudent = function() {
+                var id = Number($scope.newStudent.id);
+
+                var exists = $scope.students.some(function(student, index) {
+                    return student.id === id && index !== $scope.editIndex;
+                });
+
+                if (exists) {
+                    alert("Student ID already exists!");
+                    return;
+                }
+
+                var studentData = {
+                    id: id,
+                    name: $scope.newStudent.name,
+                    department: $scope.newStudent.department,
+                    year: Number($scope.newStudent.year)
+                };
+
+                if ($scope.editIndex === -1) {
+                    $scope.students.push(studentData);
+                } else {
+                    $scope.students[$scope.editIndex] = studentData;
+                }
+
+                $scope.newStudent = {};
+                $scope.editIndex = -1;
+            };
+
+            $scope.editStudent = function(student) {
+                $scope.editIndex = $scope.students.indexOf(student);
+                $scope.newStudent = angular.copy(student);
+            };
+
+            $scope.cancelEdit = function() {
+                $scope.newStudent = {};
+                $scope.editIndex = -1;
+            };
+
+            $scope.removeStudent = function(student) {
+                var index = $scope.students.indexOf(student);
+
+                if (index !== -1) {
+                    $scope.students.splice(index, 1);
+
+                    if ($scope.editIndex === index) {
+                        $scope.cancelEdit();
+                    } else if ($scope.editIndex > index) {
+                        $scope.editIndex--;
+                    }
+                }
+            };
+        });
+    </script>
+
+</body>
+</html>
